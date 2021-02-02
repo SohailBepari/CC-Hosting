@@ -56,7 +56,7 @@ function Circle(x, y, radius,minRadius, dx, dy, color){
     }
 }
 let circleArray = [];
-for(let i =0; i < 100; i++){
+for(let i =0; i < 50; i++){
     let radius = Math.random()*(5) + 15;                 
     let x = Math.random()*((width-radius) - (radius)) + radius;
     let y = Math.random()*((height-radius) - (radius)) + radius;
