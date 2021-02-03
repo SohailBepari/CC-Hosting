@@ -1,80 +1,75 @@
-let canvas = document.querySelector('canvas');
 
-canvas.height = window.innerHeight;
-canvas.width = window.innerWidth;
+let circle = new Circle(window.innerHeight/2, 10);
+window.addEventListener('keypress', (event) => {
+    if(event.keyCode == 32)
+        circle.jump();
+})
 
-let height = window.innerHeight;
-let width = window.innerWidth;
+let pipeArray = [];
 
-let c = canvas.getContext('2d');
-
-let maxRadius = 75;
-let gravity = 0.1;
-
-let mouse = {
-    x : undefined ,
-    y : undefined
-};
-
-window.addEventListener('mousemove', function(event){
-    mouse.x = event.x;
-    mouse.y = event.y;
-});
-
-function Circle(x, y, radius,minRadius, dx, dy, color){
-    this.x = x;
-    this.y = y;
-    this.radius = radius;
-    this.minRadius = minRadius;
-    this.dx = dx;
-    this.dy = dy;
-    this.color = color;
-    this.draw = function(){
-        c.beginPath();
-        c.arc(this.x, this.y, this.radius, 0, Math.PI*2, false);
-        c.fillStyle=this.color;
-        c.fill();
-        this.update();
-    }
-    this.update = function(){
-        if(this.x + this.radius > width || this.x-this.radius < 0)
-            this.dx = -this.dx;
-        if(this.y + this.radius > height || this.y - this.radius < 0)
-            this.dy = -this.dy*0.9;
-
-        this.x += this.dx;
-        this.y += this.dy;
-
-        this.dy += gravity;
-
-        if(Math.abs(mouse.x - this.x) < 75 && Math.abs(mouse.y - this.y) < 75){
-            (this.radius > maxRadius)?null : this.radius++;
-        }
-        else{
-            (this.radius < this.minRadius)?null : this.radius--;  
-        }
-    }
-}
-let circleArray = [];
-for(let i =0; i < 50; i++){
-    let radius = Math.random()*(5) + 15;                 
-    let x = Math.random()*((width-radius) - (radius)) + radius;
-    let y = Math.random()*((height-radius) - (radius)) + radius;
-    let dx = Math.random()*(4 - -4) - 4;
-    let dy = Math.random()*(4 - -4) - 4;
-    let colorArray = ['#FC7F6D', '#F46255', '#67696B','#C8CDCC','#FF0000'];
-    let colorNumber = Math.floor(Math.random()*colorArray.length);
-    circleArray.push(new Circle(x, y, radius, radius, dx, dy, colorArray[colorNumber]));
+let continueAnimating = true;
+let points = 0;
+let interval = undefined;
+function startRender(){
+    let val = setInterval(() => {
+        let width = 50;
+        let x = window.innerWidth + width;
+        let dist = 200;
+        let height = Math.random()*(300) + 50;
+        let yBottom = height + dist;
+        let heightBottom = window.innerHeight - yBottom; 
+    
+        pipeArray.push(new Pipe(x, 0, height, width));
+        pipeArray.push(new Pipe(x, yBottom, heightBottom, width));
+        
+    }, 1000);    
+    interval = val;
 }
 
 function animate(){
-    requestAnimationFrame(animate);
-    c.fillStyle = 'rgba(255, 255, 255, 1)';
-    c.fillRect(0, 0, width, height);
-    for(let i = 0; i < circleArray.length; i++){
-        circleArray[i].draw();
+    if(continueAnimating)
+        requestAnimationFrame(animate);
+    points += 0.2;
+    let stop = false;
+    getScore();
+    c.clearRect(0, 0, window.innerWidth, window.innerHeight);
+    circle.draw();
+    pipeArray.forEach((pipe) => {
+        pipe.draw();
+        pipe.move();
+        if(circle.hits(pipe)){
+            stop = true;
+        }
+    })
+    
+    if(circle.y + circle.radius >= window.innerHeight || stop){
+        continueAnimating = false;
+        c.font = '50px Georgia';
+        c.fillStyle = 'black';
+        c.fillText('GAME OVER', 520, 300);
+        c.font = '30px Georgia';
+        c.fillText('Points: ' + Math.floor(points), 580, 200);
+        start.style.display = 'block';
     }
 }
 
-animate();
+let start = document.getElementsByClassName('start')[0];
 
+function gameStart(){
+    pipeArray = [];
+    circle.y = window.innerHeight/2;
+    circle.vy = 0;
+    points=0;
+    continueAnimating = true;
+    start.style.display = 'none';
+    clearInterval(interval);
+    startRender();
+    animate();
+}
+
+function getScore(){
+    points += 0.1;
+    c.font = '30px Georgia';
+    c.fillStyle = 'black';
+    c.fillText('Score :' + Math.floor(points), 520,300);
+}
